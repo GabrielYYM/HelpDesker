@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.service;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -18,13 +18,16 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import com.corp.DeskHelper.chamado.Chamado.Acao;
-import com.corp.DeskHelper.chamado.Chamado.Evento;
-import com.corp.DeskHelper.chamado.Chamado.Pessoa;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Resumo;
-import com.corp.DeskHelper.chamado.DashboardDTO.CargaTecnico;
-import com.corp.DeskHelper.chamado.DashboardDTO.VolumeDiario;
+import com.corp.DeskHelper.dto.DashboardDTO;
+import com.corp.DeskHelper.dto.ChamadoDTO.Resumo;
+import com.corp.DeskHelper.dto.DashboardDTO.CargaTecnico;
+import com.corp.DeskHelper.dto.DashboardDTO.VolumeDiario;
+import com.corp.DeskHelper.model.Chamado;
 import com.corp.DeskHelper.model.User;
+import com.corp.DeskHelper.model.Chamado.Acao;
+import com.corp.DeskHelper.model.Chamado.Evento;
+import com.corp.DeskHelper.model.Chamado.Pessoa;
+import com.corp.DeskHelper.model.enums.StatusChamado;
 import com.corp.DeskHelper.model.enums.UserRole;
 
 import lombok.RequiredArgsConstructor;

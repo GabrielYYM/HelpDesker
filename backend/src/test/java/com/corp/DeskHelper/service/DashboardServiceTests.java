@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,10 +9,14 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
-import com.corp.DeskHelper.chamado.Chamado.Pessoa;
-import com.corp.DeskHelper.chamado.DashboardDTO.CargaTecnico;
-import com.corp.DeskHelper.chamado.DashboardDTO.VolumeDiario;
+import com.corp.DeskHelper.dto.ChamadoDTO;
+import com.corp.DeskHelper.dto.DashboardDTO.CargaTecnico;
+import com.corp.DeskHelper.dto.DashboardDTO.VolumeDiario;
+import com.corp.DeskHelper.model.Chamado;
+import com.corp.DeskHelper.model.Chamado.Pessoa;
+import com.corp.DeskHelper.model.enums.StatusChamado;
 import com.corp.DeskHelper.model.enums.UserRole;
+import com.corp.DeskHelper.service.DashboardService;
 
 class DashboardServiceTests {
 

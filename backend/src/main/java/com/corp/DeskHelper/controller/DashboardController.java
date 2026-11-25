@@ -1,9 +1,12 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.corp.DeskHelper.dto.DashboardDTO;
+import com.corp.DeskHelper.service.DashboardService;
 
 import lombok.RequiredArgsConstructor;
 

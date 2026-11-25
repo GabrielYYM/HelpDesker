@@ -62,8 +62,7 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | **0.7.0** | `v0.7.0` | **Testes Automatizados**: Suíte de testes unitários e de integração com JUnit 5 e Mockito | Implementado na branch de desenvolvimento |
 | **1.0.0-beta.1** | `v1.0.0-beta.1` | **Homologação & Dockerização**: Empacotamento Maven, `Dockerfile`, `docker-compose` local e carga de dados de demonstração | Planejado |
 | **1.0.0** | `v1.0.0` | **Release Oficial de Produção**: Deploy final no Render (Docker) conectado ao MongoDB Atlas com frontend integrado | Planejado |
-| **1.0.1** | `v1.0.1` | **Hotfix**: Correções emergenciais de variáveis de ambiente, CORS de produção ou build Docker | Planejado |
-| **1.0.2** | `v1.0.2` | **Polimento**: Ajustes visuais finos, dados demonstrativos e documentação para apresentação | Planejado |
+| **1.0.2** | `v1.0.1` | **Polimento**: Ajustes visuais finos, dados demonstrativos e documentação para apresentação | Planejado |
 
 ---
 

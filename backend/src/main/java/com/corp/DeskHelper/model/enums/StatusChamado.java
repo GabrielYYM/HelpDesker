@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.model.enums;
 
 public enum StatusChamado {
     ABERTO,

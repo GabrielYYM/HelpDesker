@@ -31,7 +31,7 @@ import org.springframework.session.data.mongo.MongoIndexedSessionRepository;
 import org.springframework.session.data.mongo.MongoSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import com.corp.DeskHelper.chamado.DashboardController;
+import com.corp.DeskHelper.controller.DashboardController;
 import com.corp.DeskHelper.controller.UserController;
 import com.corp.DeskHelper.dto.UserCreateRequestDTO;
 import com.corp.DeskHelper.model.User;

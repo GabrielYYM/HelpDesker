@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,16 +20,20 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.corp.DeskHelper.chamado.Chamado.Acao;
-import com.corp.DeskHelper.chamado.Chamado.Alteracao;
-import com.corp.DeskHelper.chamado.Chamado.Evento;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Abertura;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Edicao;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Nota;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Transicao;
 import com.corp.DeskHelper.dto.UserResponseDTO;
+import com.corp.DeskHelper.dto.ChamadoDTO.Abertura;
+import com.corp.DeskHelper.dto.ChamadoDTO.Edicao;
+import com.corp.DeskHelper.dto.ChamadoDTO.Nota;
+import com.corp.DeskHelper.dto.ChamadoDTO.Transicao;
+import com.corp.DeskHelper.model.Chamado;
+import com.corp.DeskHelper.model.Chamado.Acao;
+import com.corp.DeskHelper.model.Chamado.Alteracao;
+import com.corp.DeskHelper.model.Chamado.Evento;
+import com.corp.DeskHelper.model.enums.StatusChamado;
 import com.corp.DeskHelper.model.enums.UserRole;
+import com.corp.DeskHelper.repository.ChamadoRepository;
 import com.corp.DeskHelper.service.AuthService;
+import com.corp.DeskHelper.service.ChamadoService;
 
 class ChamadoServiceTests {
 
