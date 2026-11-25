@@ -2,12 +2,20 @@ package com.corp.DeskHelper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -16,15 +24,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.session.data.mongo.MongoIndexedSessionRepository;
+import org.springframework.session.data.mongo.MongoSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import com.corp.DeskHelper.chamado.DashboardController;
+import com.corp.DeskHelper.controller.DashboardController;
 import com.corp.DeskHelper.controller.UserController;
 import com.corp.DeskHelper.dto.UserCreateRequestDTO;
 import com.corp.DeskHelper.model.User;
 import com.corp.DeskHelper.model.enums.UserRole;
+import com.corp.DeskHelper.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,6 +53,12 @@ class GlobalExceptionHandlerTests {
     @MockitoBean(name = "mongoSessionRepository")
     private MongoIndexedSessionRepository sessionRepository;
 
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Autowired
     private MongoConverter mongoConverter;
 
@@ -49,6 +67,89 @@ class GlobalExceptionHandlerTests {
 
     @Autowired
     private DashboardController dashboardController;
+
+    @Test
+    void firstAccessLoginAndLogoutUseTheRealHttpSessionAndCsrf() throws Exception {
+        User user = User.builder().id("id-teste").code("0042").name("Pessoa de teste").build();
+        when(userRepository.findByCode("0042")).thenReturn(Optional.of(user));
+
+        Map<String, MongoSession> sessions = new ConcurrentHashMap<>();
+        when(sessionRepository.createSession()).thenAnswer(invocation -> new MongoSession());
+        when(sessionRepository.findById(anyString())).thenAnswer(invocation -> sessions.get(invocation.getArgument(0)));
+        doAnswer(invocation -> {
+            MongoSession session = invocation.getArgument(0);
+            sessions.put(session.getId(), session);
+            return null;
+        }).when(sessionRepository).save(any(MongoSession.class));
+        doAnswer(invocation -> {
+            sessions.remove(invocation.getArgument(0));
+            return null;
+        }).when(sessionRepository).deleteById(anyString());
+
+        try (HttpClient client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build()) {
+            assertThat(get(client, "/api/me").statusCode()).isEqualTo(401);
+            String firstAccess = """
+                {"code":"0042","newPassword":"senha-ficticia","confirmPassword":"senha-ficticia"}
+                """;
+            assertThat(post(client, "/api/auth/first-access", firstAccess, null).statusCode()).isEqualTo(403);
+            assertThat(user.isFirstAccess()).isTrue();
+            assertThat(post(client, "/api/auth/first-access", firstAccess, csrf(client)).statusCode()).isEqualTo(200);
+            assertThat(user.isFirstAccess()).isFalse();
+            assertThat(passwordEncoder.matches("senha-ficticia", user.getPassword())).isTrue();
+            assertThat(post(client, "/api/auth/first-access", firstAccess, csrf(client)).statusCode()).isEqualTo(409);
+
+            assertThat(post(client, "/api/auth/login", """
+                {"code":"0042","password":"senha-errada"}
+                """, csrf(client)).statusCode()).isEqualTo(401);
+            var login = post(client, "/api/auth/login", """
+                {"code":"0042","password":"senha-ficticia"}
+                """, csrf(client));
+            assertThat(login.statusCode()).isEqualTo(200);
+            assertThat(new ObjectMapper().readTree(login.body()).has("password")).isFalse();
+
+            var me = get(client, "/api/me");
+            assertThat(me.statusCode()).isEqualTo(200);
+            assertThat(new ObjectMapper().readTree(me.body()).path("code").asText()).isEqualTo("0042");
+            assertThat(get(client, "/api/dashboard").statusCode()).isEqualTo(403);
+            assertThat(get(client, "/api/users").statusCode()).isEqualTo(403);
+
+            var invalidTicket = post(client, "/api/chamados", """
+                {"titulo":" ","descricao":""}
+                """, csrf(client));
+            assertThat(invalidTicket.statusCode()).isEqualTo(400);
+            JsonNode errors = new ObjectMapper().readTree(invalidTicket.body()).path("fields");
+            assertThat(errors.has("titulo")).isTrue();
+            assertThat(errors.has("descricao")).isTrue();
+
+            assertThat(post(client, "/api/logout", "", csrf(client)).statusCode()).isEqualTo(204);
+            assertThat(get(client, "/api/me").statusCode()).isEqualTo(401);
+            assertThat(sessions.values()).noneMatch(session ->
+                session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY) != null);
+        }
+    }
+
+    private URI uri(String path) {
+        return URI.create("http://localhost:" + port + path);
+    }
+
+    private HttpResponse<String> get(HttpClient client, String path) throws Exception {
+        return client.send(HttpRequest.newBuilder(uri(path)).GET().build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private JsonNode csrf(HttpClient client) throws Exception {
+        var response = get(client, "/api/auth/csrf");
+        assertThat(response.statusCode()).isEqualTo(200);
+        return new ObjectMapper().readTree(response.body());
+    }
+
+    private HttpResponse<String> post(HttpClient client, String path, String body, JsonNode csrf) throws Exception {
+        var request = HttpRequest.newBuilder(uri(path)).header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body));
+        if (csrf != null) {
+            request.header(csrf.path("headerName").asText(), csrf.path("token").asText());
+        }
+        return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+    }
 
     @Test
     @WithMockUser(roles = "USER")

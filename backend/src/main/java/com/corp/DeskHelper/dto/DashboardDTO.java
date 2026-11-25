@@ -1,10 +1,11 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.dto;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import com.corp.DeskHelper.chamado.ChamadoDTO.Resumo;
+import com.corp.DeskHelper.dto.ChamadoDTO.Resumo;
+import com.corp.DeskHelper.model.enums.StatusChamado;
 
 public record DashboardDTO(
     LocalDate inicio, LocalDate fim, int total, Map<StatusChamado, Integer> porStatus,

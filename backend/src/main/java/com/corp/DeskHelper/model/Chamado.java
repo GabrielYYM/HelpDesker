@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.model;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.corp.DeskHelper.model.enums.StatusChamado;
 import com.corp.DeskHelper.model.enums.UserRole;
 
 import lombok.Getter;
@@ -31,7 +32,7 @@ public class Chamado {
     private Instant atualizadoEm;
     private List<Evento> historico = new ArrayList<>();
 
-    static Chamado abrir(String protocolo, String titulo, String descricao, Pessoa solicitante, Instant agora) {
+    public static Chamado abrir(String protocolo, String titulo, String descricao, Pessoa solicitante, Instant agora) {
         Chamado chamado = new Chamado();
         chamado.protocolo = protocolo;
         chamado.titulo = titulo;
@@ -43,7 +44,7 @@ public class Chamado {
         return chamado;
     }
 
-    boolean editar(String novoTitulo, String novaDescricao, Pessoa autor, Instant agora) {
+    public boolean editar(String novoTitulo, String novaDescricao, Pessoa autor, Instant agora) {
         List<Alteracao> alteracoes = new ArrayList<>();
         if (!titulo.equals(novoTitulo)) {
             alteracoes.add(new Alteracao("Título", titulo, novoTitulo));
@@ -60,20 +61,20 @@ public class Chamado {
         return true;
     }
 
-    void comentar(Pessoa autor, String comentario, Instant agora) {
+    public void comentar(Pessoa autor, String comentario, Instant agora) {
         registrar(Acao.COMENTARIO, autor, status, comentario, List.of(), agora);
     }
 
-    void iniciar(Pessoa autor, String comentario, Instant agora) {
+    public void iniciar(Pessoa autor, String comentario, Instant agora) {
         tecnico = autor;
         transicionar(Acao.INICIO_ATENDIMENTO, StatusChamado.EM_ANDAMENTO, autor, comentario, agora);
     }
 
-    void resolver(Pessoa autor, String comentario, Instant agora) {
+    public void resolver(Pessoa autor, String comentario, Instant agora) {
         transicionar(Acao.RESOLUCAO, StatusChamado.RESOLVIDO, autor, comentario, agora);
     }
 
-    void cancelar(Pessoa autor, String comentario, Instant agora) {
+    public void cancelar(Pessoa autor, String comentario, Instant agora) {
         transicionar(Acao.CANCELAMENTO, StatusChamado.CANCELADO, autor, comentario, agora);
     }
 

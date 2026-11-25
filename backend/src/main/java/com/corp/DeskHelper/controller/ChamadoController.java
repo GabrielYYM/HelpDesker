@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.controller;
 
 import java.net.URI;
 
@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.corp.DeskHelper.chamado.ChamadoDTO.Abertura;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Detalhe;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Edicao;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Nota;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Pagina;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Transicao;
+import com.corp.DeskHelper.dto.ChamadoDTO.Abertura;
+import com.corp.DeskHelper.dto.ChamadoDTO.Detalhe;
+import com.corp.DeskHelper.dto.ChamadoDTO.Edicao;
+import com.corp.DeskHelper.dto.ChamadoDTO.Nota;
+import com.corp.DeskHelper.dto.ChamadoDTO.Pagina;
+import com.corp.DeskHelper.dto.ChamadoDTO.Transicao;
+import com.corp.DeskHelper.model.enums.StatusChamado;
+import com.corp.DeskHelper.service.ChamadoService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.PositiveOrZero;

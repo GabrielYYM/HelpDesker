@@ -1,4 +1,4 @@
-package com.corp.DeskHelper.chamado;
+package com.corp.DeskHelper.service;
 
 import java.time.Instant;
 import java.util.EnumSet;
@@ -19,17 +19,19 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.corp.DeskHelper.chamado.Chamado.Acao;
-import com.corp.DeskHelper.chamado.Chamado.Pessoa;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Abertura;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Detalhe;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Edicao;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Nota;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Pagina;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Resumo;
-import com.corp.DeskHelper.chamado.ChamadoDTO.Transicao;
+import com.corp.DeskHelper.dto.ChamadoDTO.Abertura;
+import com.corp.DeskHelper.dto.ChamadoDTO.Detalhe;
+import com.corp.DeskHelper.dto.ChamadoDTO.Edicao;
+import com.corp.DeskHelper.dto.ChamadoDTO.Nota;
+import com.corp.DeskHelper.dto.ChamadoDTO.Pagina;
+import com.corp.DeskHelper.dto.ChamadoDTO.Resumo;
+import com.corp.DeskHelper.dto.ChamadoDTO.Transicao;
+import com.corp.DeskHelper.model.Chamado;
+import com.corp.DeskHelper.model.Chamado.Acao;
+import com.corp.DeskHelper.model.Chamado.Pessoa;
+import com.corp.DeskHelper.model.enums.StatusChamado;
 import com.corp.DeskHelper.model.enums.UserRole;
-import com.corp.DeskHelper.service.AuthService;
+import com.corp.DeskHelper.repository.ChamadoRepository;
 
 import lombok.RequiredArgsConstructor;
 
