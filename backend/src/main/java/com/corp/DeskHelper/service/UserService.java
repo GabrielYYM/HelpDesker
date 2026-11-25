@@ -35,7 +35,7 @@ public class UserService {
         User user = User.builder()
             .code(generateNextUserCode())
             .name(request.name().trim())
-            .role(request.role() != null ? request.role() : UserRole.USUARIO)
+            .role(request.role() != null ? request.role() : UserRole.USER)
             .firstAccess(true)
             .active(true)
             .build();

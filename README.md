@@ -1,4 +1,4 @@
-# DeskHelper
+# HelpDesker
 
 Sistema completo de Help Desk desenvolvido com **Spring Boot**, **React** e **MongoDB Atlas**.
 
@@ -9,7 +9,7 @@ Sistema completo de Help Desk desenvolvido com **Spring Boot**, **React** e **Mo
 ### Autenticação e Cadastro
 - **Login, logout e cadastro** de usuários.
 - **Senhas criptografadas** com **Argon2**.
-- **Controle de acesso baseado em papéis (RBAC)**: `USUARIO`, `GERENTE` e `ADMINISTRADOR`.
+- **Controle de acesso baseado em papéis (RBAC)**: `ADM`, `USER` e `IT`.
 
 ### Controle de Chamados
 - **Ciclo completo**: Abertura, edição, acompanhamento e cancelamento.
@@ -55,8 +55,8 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | :--- | :--- | :--- | :---: |
 | **0.1.0** | `v0.1.0` | **Setup Base**: Configuração Spring Boot + React, conexão MongoDB Atlas| FINALIZADA |
 | **0.2.0** | `v0.2.0` | **Segurança & Autenticação Core**: Criptografia Argon2, perfis, endpoints de Login, Logout e Cadastro com proteção CSRF | Planejado |
-| **0.3.0** | `v0.3.0` | **Páginas de Erro & Proteção de Rotas**: Autorização por perfil (rotas e métodos) e páginas customizadas para erro 403, 404 e 500 | Planejado |
-| **0.4.0** | `v0.4.0` | **Painel do Gerente (Gestão & Fila)**: Cadastro/edição de usuários e técnicos sem senha e visualização da fila geral de atendimento | Planejado |
+| **0.3.0** | `v0.3.0` | **Autorização & Erros da API**: Proteção de endpoints por perfil e tratamento de erros no backend | Planejado |
+| **0.4.0** | `v0.4.0` | **Painel do Gerente (Gestão & Fila)**: Integração da sessão no React, proteção de rotas e páginas de erro 403, 404 e 500. Cadastro e edição de usuários e técnicos sem senha inicial e visualização da fila geral de atendimento | Planejado |
 | **0.5.0** | `v0.5.0` | **Controle de Chamados (Core)**: Abertura, geração de protocolo próprio, edição, cancelamento e máquina de estados (`ABERTO`, `EM_ANDAMENTO`, `RESOLVIDO`, `CANCELADO`) | Planejado |
 | **0.6.0** | `v0.6.0` | **Interações nos Chamados**: Comentários, histórico de auditoria e fluxo de resolução com técnico responsável | Planejado |
 | **0.7.0** | `v0.7.0` | **Dashboard do Gerente & Métricas**: Indicadores gerais, gráficos do último mês, tempo médio de atendimento e carga por técnico | Planejado |
@@ -67,48 +67,3 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | **1.0.2** | `v1.0.2` | **Polimento**: Ajustes visuais finos, dados demonstrativos e documentação para apresentação | Planejado |
 
 ---
-
-
-### Mapeamento das Branches de Features por Ciclo
-
-```text
-develop
-│
-├── [Ciclo 0.1.0]
-│   ├── feature/setup-project-structure
-│   └── feature/mongo-session-config
-│
-├── [Ciclo 0.2.0]
-│   ├── feature/auth-argon2-password
-│   ├── feature/auth-user-roles
-│   └── feature/auth-login-register
-│
-├── [Ciclo 0.3.0]
-│   ├── feature/security-role-authorization
-│   └── feature/custom-error-pages
-│
-├── [Ciclo 0.4.0]
-│   ├── feature/manager-user-crud
-│   └── feature/manager-queue-view
-│
-├── [Ciclo 0.5.0]
-│   ├── feature/ticket-protocol-generation
-│   ├── feature/ticket-lifecycle
-│   └── feature/ticket-crud-ui
-│
-├── [Ciclo 0.6.0]
-│   ├── feature/ticket-comments-history
-│   └── feature/ticket-assignment-resolution
-│
-├── [Ciclo 0.7.0]
-│   ├── feature/dashboard-metrics-backend
-│   └── feature/dashboard-charts-frontend
-│
-├── [Ciclo 0.8.0]
-│   ├── feature/unit-tests-mockito
-│   └── feature/integration-tests-junit5
-│
-└── [Ciclo 1.0.0]
-    └── release/v1.0.0
-        └── feature/docker-render-setup
-```

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -36,7 +37,8 @@ public class User {
     private boolean firstAccess = true;
 
     @Builder.Default
-    private UserRole role = UserRole.USUARIO;
+    @ValueConverter(UserRoleMongoConverter.class)
+    private UserRole role = UserRole.USER;
 
     @Builder.Default
     private boolean active = true;
