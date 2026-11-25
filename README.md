@@ -1,4 +1,4 @@
-# DeskHelper
+# HelpDesker
 
 Sistema completo de Help Desk desenvolvido com **Spring Boot**, **React** e **MongoDB Atlas**.
 
@@ -67,48 +67,3 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | **1.0.2** | `v1.0.2` | **Polimento**: Ajustes visuais finos, dados demonstrativos e documentação para apresentação | Planejado |
 
 ---
-
-
-### Mapeamento das Branches de Features por Ciclo
-
-```text
-develop
-│
-├── [Ciclo 0.1.0]
-│   ├── feature/setup-project-structure
-│   └── feature/mongo-session-config
-│
-├── [Ciclo 0.2.0]
-│   ├── feature/auth-argon2-password
-│   ├── feature/auth-user-roles
-│   └── feature/auth-login-register
-│
-├── [Ciclo 0.3.0]
-│   ├── feature/security-role-authorization
-│   └── feature/custom-error-pages
-│
-├── [Ciclo 0.4.0]
-│   ├── feature/manager-user-crud
-│   └── feature/manager-queue-view
-│
-├── [Ciclo 0.5.0]
-│   ├── feature/ticket-protocol-generation
-│   ├── feature/ticket-lifecycle
-│   └── feature/ticket-crud-ui
-│
-├── [Ciclo 0.6.0]
-│   ├── feature/ticket-comments-history
-│   └── feature/ticket-assignment-resolution
-│
-├── [Ciclo 0.7.0]
-│   ├── feature/dashboard-metrics-backend
-│   └── feature/dashboard-charts-frontend
-│
-├── [Ciclo 0.8.0]
-│   ├── feature/unit-tests-mockito
-│   └── feature/integration-tests-junit5
-│
-└── [Ciclo 1.0.0]
-    └── release/v1.0.0
-        └── feature/docker-render-setup
-```
