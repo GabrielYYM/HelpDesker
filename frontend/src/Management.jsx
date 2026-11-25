@@ -11,11 +11,13 @@ import GroupOutlined from '@mui/icons-material/GroupOutlined'
 import HourglassEmpty from '@mui/icons-material/HourglassEmpty'
 import Logout from '@mui/icons-material/Logout'
 import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined'
+import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined'
 import Search from '@mui/icons-material/Search'
 import VerifiedUserOutlined from '@mui/icons-material/VerifiedUserOutlined'
 import { PieChart } from '@mui/x-charts/PieChart'
-import { Link, NavLink, useLocation } from 'react-router'
+import { Link, matchPath, NavLink, useLocation } from 'react-router'
 import { api } from './api'
+import Chamados from './Chamados'
 import { Brand, ErrorNotice } from './Shared'
 
 const roles = {
@@ -242,6 +244,8 @@ export default function Management({ user, canManage, onSignOut }) {
   const [leaving, setLeaving] = useState(false)
   const [logoutError, setLogoutError] = useState(null)
   const showsUsers = route === '/usuarios'
+  const protocolo = matchPath('/chamados/:protocolo', route)?.params.protocolo
+  const showsTickets = route === '/chamados' || Boolean(protocolo)
   const showsData = canManage && (route === '/' || showsUsers)
 
   useEffect(() => {
@@ -278,9 +282,10 @@ export default function Management({ user, canManage, onSignOut }) {
     }
   }
 
-  const title = showsUsers ? 'Usuários' : canManage ? 'Visão geral' : 'Minha conta'
+  const title = showsTickets ? 'Chamados' : showsUsers ? 'Usuários' : canManage ? 'Visão geral' : 'Minha conta'
   const nav = [
     { to: '/', label: canManage ? 'Visão geral' : 'Minha conta', Icon: canManage ? DashboardOutlined : PersonOutlineOutlined },
+    { to: '/chamados', label: 'Chamados', Icon: ConfirmationNumberOutlined },
     ...(canManage ? [{ to: '/usuarios', label: 'Usuários', Icon: GroupOutlined }] : []),
   ]
   const errorStatus = { '/403': 403, '/500': 500 }[route] || (showsUsers && !canManage ? 403 : 404)
@@ -289,10 +294,10 @@ export default function Management({ user, canManage, onSignOut }) {
     <div className="min-h-dvh md:grid md:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="flex flex-col border-b border-neutral-200 bg-white md:sticky md:top-0 md:h-dvh md:border-r md:border-b-0">
         <Link to="/" className="px-5 py-5 md:px-6"><Brand /></Link>
-        <nav aria-label="Navegação principal" className="flex gap-1 px-4 pb-3 md:mt-7 md:flex-col">
+        <nav aria-label="Navegação principal" className="flex flex-wrap gap-1 px-4 pb-3 md:mt-7 md:flex-col">
           {canManage && <div className="mb-1 hidden px-3 text-xs font-semibold tracking-wider text-neutral-500 uppercase md:block">Gestão</div>}
           {nav.map(({ to, label, Icon }) => (
-            <NavLink key={to} to={to} end className={({ isActive }) =>
+            <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) =>
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ' +
               (isActive ? 'bg-neutral-100 text-neutral-950' : 'text-neutral-600 hover:bg-neutral-50')}>
               <Icon fontSize="small" />{label}
@@ -311,13 +316,13 @@ export default function Management({ user, canManage, onSignOut }) {
         <header className="flex min-h-[73px] items-center justify-between gap-3 border-b border-neutral-200 bg-white px-5 sm:px-8">
           <div className="flex items-center gap-2 text-sm">
             <span className="text-neutral-600">{canManage ? 'Gestão' : 'HelpDesker'}</span>
-            {(showsData || route === '/') && <><span aria-hidden="true" className="text-neutral-400">/</span><span className="font-semibold">{title}</span></>}
+            {(showsData || showsTickets || route === '/') && <><span aria-hidden="true" className="text-neutral-400">/</span><span className="font-semibold">{title}</span></>}
           </div>
           <Button size="small" color="inherit" startIcon={<Logout />} onClick={signOut} disabled={leaving}>Sair</Button>
         </header>
         <main className="mx-auto max-w-[1500px] px-5 py-7 sm:px-8 sm:py-9">
           {logoutError && <p role="alert" className="mb-5 rounded-lg border border-neutral-300 bg-white p-3">{logoutError}</p>}
-          {showsData ? (
+          {showsTickets ? <Chamados protocolo={protocolo} canManage={canManage} onSignOut={onSignOut} /> : showsData ? (
             <>
               <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
                 <div>
