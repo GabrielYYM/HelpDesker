@@ -2,6 +2,8 @@
 
 Sistema completo de Help Desk desenvolvido com **Spring Boot**, **React** e **MongoDB Atlas**.
 
+![Dashboard do HelpDesker](./docs/dashboard.png)
+
 ---
 
 ## Escopo do Sistema
