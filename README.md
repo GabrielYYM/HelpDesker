@@ -1,9 +1,7 @@
 # HelpDesker
 
-
 Sistema completo de Help Desk desenvolvido com **Spring Boot**, **React** e **MongoDB Atlas**.
 
-<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/1d8a3df9-7b02-4162-924c-dfb23940e1e3" />
 ---
 
 ## Escopo do Sistema
