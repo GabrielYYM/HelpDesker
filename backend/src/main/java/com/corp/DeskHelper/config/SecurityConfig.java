@@ -1,20 +1,25 @@
 package com.corp.DeskHelper.config;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.data.mongo.JdkMongoSessionConverter;
@@ -23,14 +28,20 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.DispatcherType;
+
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @EnableMongoHttpSession(maxInactiveIntervalInSeconds = 1800)
 public class SecurityConfig {
 
     @Value("${cors.allowed-origins}")
     private String[] allowedOrigins;
+
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,9 +55,11 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(requestHandler)
             )
             .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .authenticationEntryPoint(customAuthenticationEntryPoint())
+                .accessDeniedHandler(customAccessDeniedHandler())
             )
             .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .requestMatchers("/api/logout", "/api/me").authenticated()
                 .anyRequest().authenticated()
@@ -59,6 +72,40 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("timestamp", LocalDateTime.now().toString());
+            body.put("status", HttpStatus.UNAUTHORIZED.value());
+            body.put("error", HttpStatus.UNAUTHORIZED.getReasonPhrase());
+            body.put("message", "Não autenticado: faça login para acessar este recurso");
+            body.put("path", request.getRequestURI());
+
+            response.getWriter().write(objectMapper.writeValueAsString(body));
+        };
+    }
+
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("timestamp", LocalDateTime.now().toString());
+            body.put("status", HttpStatus.FORBIDDEN.value());
+            body.put("error", HttpStatus.FORBIDDEN.getReasonPhrase());
+            body.put("message", "Acesso negado: permissões insuficientes para este recurso");
+            body.put("path", request.getRequestURI());
+
+            response.getWriter().write(objectMapper.writeValueAsString(body));
+        };
     }
 
     @Bean
