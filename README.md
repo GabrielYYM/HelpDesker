@@ -55,8 +55,8 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | :--- | :--- | :--- | :---: |
 | **0.1.0** | `v0.1.0` | **Setup Base**: Configuração Spring Boot + React, conexão MongoDB Atlas| FINALIZADA |
 | **0.2.0** | `v0.2.0` | **Segurança & Autenticação Core**: Criptografia Argon2, perfis, endpoints de Login, Logout e Cadastro com proteção CSRF | Planejado |
-| **0.3.0** | `v0.3.0` | **Páginas de Erro & Proteção de Rotas**: Autorização por perfil (rotas e métodos) e páginas customizadas para erro 403, 404 e 500 | Planejado |
-| **0.4.0** | `v0.4.0` | **Painel do Gerente (Gestão & Fila)**: Cadastro/edição de usuários e técnicos sem senha e visualização da fila geral de atendimento | Planejado |
+| **0.3.0** | `v0.3.0` | **Autorização & Erros da API**: Proteção de endpoints por perfil e tratamento de erros no backend | Planejado |
+| **0.4.0** | `v0.4.0` | **Painel do Gerente (Gestão & Fila)**: Integração da sessão no React, proteção de rotas e páginas de erro 403, 404 e 500. Cadastro e edição de usuários e técnicos sem senha inicial e visualização da fila geral de atendimento | Planejado |
 | **0.5.0** | `v0.5.0` | **Controle de Chamados (Core)**: Abertura, geração de protocolo próprio, edição, cancelamento e máquina de estados (`ABERTO`, `EM_ANDAMENTO`, `RESOLVIDO`, `CANCELADO`) | Planejado |
 | **0.6.0** | `v0.6.0` | **Interações nos Chamados**: Comentários, histórico de auditoria e fluxo de resolução com técnico responsável | Planejado |
 | **0.7.0** | `v0.7.0` | **Dashboard do Gerente & Métricas**: Indicadores gerais, gráficos do último mês, tempo médio de atendimento e carga por técnico | Planejado |
