@@ -59,7 +59,7 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | **0.4.0** | `v0.4.0` | **Painel do Gerente (Gestão & Fila)**: Integração da sessão no React, proteção de rotas e páginas de erro 403, 404 e 500. Cadastro e edição de usuários e técnicos sem senha inicial e visualização da fila geral de atendimento | Planejado |
 | **0.5.0** | `v0.5.0` | **Controle de Chamados**: Protocolo próprio, abertura, edição, cancelamento, atendimento com técnico responsável, comentários e histórico de auditoria | Implementado na branch de desenvolvimento |
 | **0.6.0** | `v0.6.0` | **Dashboard do Gerente & Métricas**: Indicadores gerais, gráficos do último mês, tempo médio de atendimento e carga por técnico | Implementado na branch de desenvolvimento |
-| **0.7.0** | `v0.7.0` | **Testes Automatizados**: Suíte de testes unitários e de integração com JUnit 5 e Mockito | Planejado |
+| **0.7.0** | `v0.7.0` | **Testes Automatizados**: Suíte de testes unitários e de integração com JUnit 5 e Mockito | Implementado na branch de desenvolvimento |
 | **1.0.0-beta.1** | `v1.0.0-beta.1` | **Homologação & Dockerização**: Empacotamento Maven, `Dockerfile`, `docker-compose` local e carga de dados de demonstração | Planejado |
 | **1.0.0** | `v1.0.0` | **Release Oficial de Produção**: Deploy final no Render (Docker) conectado ao MongoDB Atlas com frontend integrado | Planejado |
 | **1.0.1** | `v1.0.1` | **Hotfix**: Correções emergenciais de variáveis de ambiente, CORS de produção ou build Docker | Planejado |
@@ -79,3 +79,9 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 - O volume diário usa os últimos 30 dias corridos, incluindo o dia atual, no fuso de São Paulo. Aberturas e resoluções são contabilizadas na data em que ocorreram.
 - O tempo médio de atendimento (TMA) mede o intervalo entre assumir e resolver, para chamados resolvidos no período. Comentários posteriores não alteram esse tempo.
 - A carga de cada técnico mostra os atendimentos em andamento no momento, as resoluções no período e o TMA individual. A distribuição por estado e o total consideram todos os chamados.
+
+## Testes automatizados
+
+Com Java 21, execute `bash ./mvnw --batch-mode test` na pasta `backend`. No Windows, use `.\mvnw.cmd -B test`.
+
+Os testes HTTP executam o Spring Boot em uma porta aleatória e substituem a persistência de usuários e sessões por mocks. A suíte roda sem MongoDB ativo e sem credenciais do Atlas. O GitHub Actions executa os testes em pushes e pull requests que alterem o backend ou o workflow.
