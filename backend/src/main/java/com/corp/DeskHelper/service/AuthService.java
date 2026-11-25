@@ -1,6 +1,7 @@
 package com.corp.DeskHelper.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -27,6 +28,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final String TEMPORARY_HASH = "FIRST_ACCESS_HASH";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -38,16 +41,17 @@ public class AuthService {
             throw new DisabledException("Usuário inativo no sistema");
         }
 
-        if (user.isFirstAccess() || user.getPassword() == null) {
-            throw new BadCredentialsException("Primeiro acesso pendente: defina sua senha inicial");
-        }
-
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (user.getPassword() == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Código ou senha inválidos");
         }
 
+        startSession(user, httpRequest);
+        return UserResponseDTO.fromEntity(user);
+    }
+
+    private void startSession(User user, HttpServletRequest httpRequest) {
         List<SimpleGrantedAuthority> authorities = List.of(
-            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+            new SimpleGrantedAuthority(user.isFirstAccess() ? "ROLE_FIRST_ACCESS" : "ROLE_" + user.getRole().name())
         );
 
         Authentication auth = new UsernamePasswordAuthenticationToken(user.getCode(), null, authorities);
@@ -59,39 +63,50 @@ public class AuthService {
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
         session.setAttribute("USER_ID", user.getId());
-
-        return UserResponseDTO.fromEntity(user);
+        session.setAttribute(TEMPORARY_HASH, user.isFirstAccess() ? user.getPassword() : null);
     }
 
-    public UserResponseDTO firstAccess(FirstAccessRequestDTO request) {
+    public UserResponseDTO firstAccess(FirstAccessRequestDTO request, HttpServletRequest httpRequest) {
         if (!request.newPassword().equals(request.confirmPassword())) {
             throw new IllegalArgumentException("As senhas não coincidem");
         }
 
-        User user = userRepository.findByCode(request.code())
-            .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-
-        if (!user.isFirstAccess()) {
-            throw new IllegalStateException("O primeiro acesso para este usuário já foi realizado");
+        HttpSession session = httpRequest.getSession(false);
+        String temporaryHash = session == null ? null : (String) session.getAttribute(TEMPORARY_HASH);
+        User user = currentUser();
+        if (!user.isActive() || !user.isFirstAccess() || temporaryHash == null
+                || !Objects.equals(temporaryHash, user.getPassword())) {
+            throw new IllegalStateException("A senha temporária mudou ou deixou de ser válida. Entre novamente.");
         }
-
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        if (passwordEncoder.matches(request.newPassword(), temporaryHash)) {
+            throw new IllegalArgumentException("A nova senha deve ser diferente da senha temporária.");
+        }
+        if (userRepository.completeFirstAccess(user.getId(), temporaryHash, passwordEncoder.encode(request.newPassword())) != 1) {
+            throw new IllegalStateException("A senha temporária mudou ou deixou de ser válida. Entre novamente.");
+        }
+        session.invalidate();
         user.setFirstAccess(false);
-        userRepository.save(user);
-
+        startSession(user, httpRequest);
         return UserResponseDTO.fromEntity(user);
     }
 
     public UserResponseDTO getCurrentUser() {
+        User user = currentUser();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!user.isFirstAccess() && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_FIRST_ACCESS"))) {
+            throw new BadCredentialsException("Primeiro acesso concluído. Entre novamente.");
+        }
+        return UserResponseDTO.fromEntity(user);
+    }
+
+    private User currentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             throw new BadCredentialsException("Usuário não autenticado");
         }
 
         String code = auth.getName();
-        User user = userRepository.findByCode(code)
+        return userRepository.findByCode(code)
             .orElseThrow(() -> new BadCredentialsException("Usuário não encontrado"));
-
-        return UserResponseDTO.fromEntity(user);
     }
 }

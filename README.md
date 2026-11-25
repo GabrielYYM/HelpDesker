@@ -24,7 +24,7 @@ Sistema completo de Help Desk desenvolvido com **Spring Boot**, **React** e **Mo
 - **Tempo Médio de Atendimento (TMA)** e análise de carga de trabalho por técnico.
 
 ### Painel do Gerente
-- Gestão e cadastro de usuários e técnicos (informações cadastrais sem exigência de senha inicial).
+- Gestão e cadastro de usuários e técnicos. O sistema gera uma senha temporária e exige a troca no primeiro login.
 - Visualização e controle da fila geral de atendimento.
 
 ### Persistência e Sessões
@@ -61,8 +61,8 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 | **0.6.0** | `v0.6.0` | **Dashboard do Gerente & Métricas**: Indicadores gerais, gráficos do último mês, tempo médio de atendimento e carga por técnico | Implementado na branch de desenvolvimento |
 | **0.7.0** | `v0.7.0` | **Testes Automatizados**: Suíte de testes unitários e de integração com JUnit 5 e Mockito | Implementado na branch de desenvolvimento |
 | **1.0.0-beta.1** | `v1.0.0-beta.1` | **Homologação & Dockerização**: Empacotamento Maven, `Dockerfile`, `docker-compose` local e carga de dados de demonstração | Planejado |
-| **1.0.0** | `v1.0.0` | **Release Oficial de Produção**: Deploy final no Render (Docker) conectado ao MongoDB Atlas com frontend integrado | Planejado |
-| **1.0.2** | `v1.0.1` | **Polimento**: Ajustes visuais finos, dados demonstrativos e documentação para apresentação | Planejado |
+| **1.0.0** | `v1.0.0` | **Release Oficial de Produção**: Deploy final (Docker) conectado ao MongoDB Atlas com frontend integrado | Planejado |
+| **1.0.2** | `v1.0.1` | **Polimento**: Ajustes visuais finos, dados demonstrativos e documentação completa | Planejado |
 
 ---
 

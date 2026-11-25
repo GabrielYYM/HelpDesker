@@ -35,8 +35,8 @@ public class AuthController {
     }
 
     @PostMapping("/auth/first-access")
-    public ResponseEntity<UserResponseDTO> firstAccess(@Valid @RequestBody FirstAccessRequestDTO request) {
-        return ResponseEntity.ok(authService.firstAccess(request));
+    public ResponseEntity<UserResponseDTO> firstAccess(@Valid @RequestBody FirstAccessRequestDTO request, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(authService.firstAccess(request, httpRequest));
     }
 
     @GetMapping("/me")

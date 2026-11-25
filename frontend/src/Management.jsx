@@ -28,13 +28,13 @@ function UserAvatar({ name }) {
   return <Avatar aria-hidden="true" className="size-9 bg-neutral-100 text-sm font-semibold text-neutral-700">{initials(name)}</Avatar>
 }
 
-function UserTable({ users }) {
+function UserTable({ users, onReissue }) {
   return (
     <TableContainer>
       <Table size="small" aria-label="Usuários cadastrados" className="min-w-[550px]">
         <TableHead className="bg-neutral-50">
           <TableRow>
-            {['Nome', 'Código', 'Perfil', 'Status'].map((label) => (
+            {['Nome', 'Código', 'Perfil', 'Status', ...(onReissue ? ['Primeiro acesso'] : [])].map((label) => (
               <TableCell key={label} className="px-5 py-3 font-semibold text-neutral-600">{label}</TableCell>
             ))}
           </TableRow>
@@ -51,6 +51,9 @@ function UserTable({ users }) {
                 <Chip size="small" variant={user.active ? 'filled' : 'outlined'} label={user.active ? 'Ativo' : 'Inativo'}
                   className="font-medium" />
               </TableCell>
+              {onReissue && <TableCell className="px-5">
+                {user.active && user.firstAccess && <Button size="small" onClick={() => onReissue(user)}>Gerar nova senha</Button>}
+              </TableCell>}
             </TableRow>
           ))}
         </TableBody>
@@ -59,7 +62,7 @@ function UserTable({ users }) {
   )
 }
 
-function Users({ users }) {
+function Users({ users, onReissue }) {
   const [query, setQuery] = useState('')
   const [role, setRole] = useState('')
   const [page, setPage] = useState(0)
@@ -82,7 +85,7 @@ function Users({ users }) {
           {Object.entries(roles).map(([id, { label }]) => <MenuItem key={id} value={id}>{label}</MenuItem>)}
         </TextField>
       </div>
-      {filtered.length ? <UserTable users={filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize)} />
+      {filtered.length ? <UserTable users={filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize)} onReissue={onReissue} />
         : <p role="status" className="px-5 py-12 text-center text-neutral-600">Nenhum usuário encontrado.</p>}
       <TablePagination component="div" count={filtered.length} page={currentPage} rowsPerPage={pageSize}
         rowsPerPageOptions={[10, 25, 50]} onPageChange={(_, nextPage) => setPage(nextPage)}
@@ -93,7 +96,7 @@ function Users({ users }) {
   )
 }
 
-function CreateUserDialog({ onClose, onCreated, onSignOut, currentRole }) {
+function CreateUserDialog({ onClose, onCreated, onSignOut, currentRole, reissueUser }) {
   const [pending, setPending] = useState(false)
   const [failure, setFailure] = useState(null)
   const [created, setCreated] = useState(null)
@@ -101,17 +104,19 @@ function CreateUserDialog({ onClose, onCreated, onSignOut, currentRole }) {
   async function submit(event) {
     event.preventDefault()
     const data = Object.fromEntries(new FormData(event.currentTarget))
-    data.name = data.name.trim()
-    if (!data.name) {
+    if (!reissueUser) data.name = data.name.trim()
+    if (!reissueUser && !data.name) {
       setFailure({ message: 'Informe o nome do usuário.' })
       return
     }
     setPending(true)
     setFailure(null)
     try {
-      const newUser = await api('/users', { method: 'POST', body: data })
-      onCreated(newUser)
-      setCreated(newUser)
+      const credentials = reissueUser
+        ? await api('/users/' + encodeURIComponent(reissueUser.id) + '/temporary-password', { method: 'POST' })
+        : await api('/users', { method: 'POST', body: data })
+      if (!reissueUser) onCreated(credentials.user)
+      setCreated(credentials)
     } catch (error) {
       if (error.status === 401) onSignOut()
       else setFailure(error)
@@ -123,12 +128,15 @@ function CreateUserDialog({ onClose, onCreated, onSignOut, currentRole }) {
   return (
     <Dialog open onClose={pending ? undefined : onClose} fullWidth maxWidth="xs"
       aria-labelledby="create-user-title">
-      <DialogTitle id="create-user-title">{created ? 'Usuário cadastrado' : 'Novo usuário'}</DialogTitle>
+      <DialogTitle id="create-user-title">{created ? 'Credenciais de primeiro acesso' : reissueUser ? 'Gerar nova senha temporária' : 'Novo usuário'}</DialogTitle>
       {created ? (
         <>
           <DialogContent dividers>
-            <p className="text-neutral-700">Compartilhe este código com {created.name} para o primeiro acesso.</p>
-            <p className="mt-4 rounded-lg bg-neutral-100 px-4 py-3 text-center font-mono text-xl font-semibold">{created.code}</p>
+            <p className="text-neutral-700">Entregue o código e a senha temporária a {created.user.name} por um canal seguro. A senha só aparece nesta janela.</p>
+            <dl className="mt-4 grid gap-2 rounded-lg bg-neutral-100 p-4">
+              <dt>Código</dt><dd className="font-mono font-semibold">{created.user.code}</dd>
+              <dt>Senha temporária</dt><dd className="break-all font-mono font-semibold">{created.temporaryPassword}</dd>
+            </dl>
           </DialogContent>
           <DialogActions><Button variant="contained" onClick={onClose}>Concluir</Button></DialogActions>
         </>
@@ -136,15 +144,17 @@ function CreateUserDialog({ onClose, onCreated, onSignOut, currentRole }) {
         <form onSubmit={submit}>
           <DialogContent dividers className="grid gap-4">
             {failure && <p role="alert" className="rounded-lg bg-neutral-100 p-3 text-sm">{failure.message}</p>}
+            {reissueUser ? <p>Gerar uma nova senha para {reissueUser.name} invalida a senha temporária anterior.</p> : <>
             <TextField autoFocus required label="Nome completo" name="name" helperText={failure?.fields?.name} />
             <TextField select required label="Perfil" name="role" defaultValue="USER">
               {Object.entries(roles).filter(([id]) => id !== 'ADM' || currentRole === 'ADM')
                 .map(([id, { label }]) => <MenuItem key={id} value={id}>{label}</MenuItem>)}
             </TextField>
+            </>}
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} disabled={pending}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={pending}>{pending ? 'Salvando…' : 'Cadastrar'}</Button>
+            <Button type="submit" variant="contained" disabled={pending}>{pending ? 'Salvando…' : reissueUser ? 'Gerar senha' : 'Cadastrar'}</Button>
           </DialogActions>
         </form>
       )}
@@ -158,6 +168,7 @@ export default function Management({ user, canManage, onSignOut }) {
   const [result, setResult] = useState({})
   const [attempt, setAttempt] = useState(0)
   const [creating, setCreating] = useState(false)
+  const [reissueUser, setReissueUser] = useState(null)
   const [leaving, setLeaving] = useState(false)
   const [logoutError, setLogoutError] = useState(null)
   const showsUsers = route === '/usuarios'
@@ -249,7 +260,7 @@ export default function Management({ user, canManage, onSignOut }) {
                 {showsUsers && result.users && <Button variant="contained" startIcon={<Add />} onClick={() => setCreating(true)}>Novo usuário</Button>}
               </div>
               {!showsUsers ? <Dashboard onSignOut={onSignOut} /> : result.error ? <ErrorNotice status={result.error.status} onRetry={retry} />
-                : result.users ? <Users users={result.users} />
+                : result.users ? <Users users={result.users} onReissue={user.role === 'ADM' ? setReissueUser : undefined} />
                   : <div className="grid min-h-44 place-items-center"><CircularProgress aria-label="Carregando usuários" /></div>}
             </>
           ) : route === '/' ? (
@@ -265,7 +276,8 @@ export default function Management({ user, canManage, onSignOut }) {
           ) : <ErrorNotice status={errorStatus} />}
         </main>
       </div>
-      {creating && <CreateUserDialog currentRole={user.role} onClose={() => setCreating(false)} onSignOut={onSignOut}
+      {(creating || reissueUser) && <CreateUserDialog currentRole={user.role} reissueUser={reissueUser}
+        onClose={() => { setCreating(false); setReissueUser(null) }} onSignOut={onSignOut}
         onCreated={(newUser) => setResult(({ users }) => ({ users: [...users, newUser] }))} />}
     </div>
   )

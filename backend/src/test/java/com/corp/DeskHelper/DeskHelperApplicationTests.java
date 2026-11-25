@@ -9,7 +9,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
     "server.port=0",
     "cors.allowed-origins=http://localhost:5173",
     "spring.mongodb.uri=mongodb://127.0.0.1:27017/deskhelper_test",
-    "spring.mongodb.database=deskhelper_test"
+    "spring.mongodb.database=deskhelper_test",
+    "spring.data.mongodb.auto-index-creation=false"
 })
 class DeskHelperApplicationTests {
 

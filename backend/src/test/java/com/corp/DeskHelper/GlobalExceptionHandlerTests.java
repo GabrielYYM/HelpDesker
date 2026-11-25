@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +44,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "cors.allowed-origins=http://localhost:5173",
     "spring.mongodb.uri=mongodb://localhost:27017/deskhelper",
-    "spring.mongodb.database=deskhelper"
+    "spring.mongodb.database=deskhelper",
+    "spring.data.mongodb.auto-index-creation=false"
 })
 class GlobalExceptionHandlerTests {
 
@@ -70,8 +72,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void firstAccessLoginAndLogoutUseTheRealHttpSessionAndCsrf() throws Exception {
-        User user = User.builder().id("id-teste").code("0042").name("Pessoa de teste").build();
+        String temporaryHash = passwordEncoder.encode("senha-temporaria");
+        User user = User.builder().id("id-teste").code("0042").name("Pessoa de teste").password(temporaryHash).build();
         when(userRepository.findByCode("0042")).thenReturn(Optional.of(user));
+        when(userRepository.completeFirstAccess(eq("id-teste"), eq(temporaryHash), anyString())).thenAnswer(invocation -> {
+            user.setPassword(invocation.getArgument(2));
+            user.setFirstAccess(false);
+            return 1L;
+        });
 
         Map<String, MongoSession> sessions = new ConcurrentHashMap<>();
         when(sessionRepository.createSession()).thenAnswer(invocation -> new MongoSession());
@@ -89,24 +97,38 @@ class GlobalExceptionHandlerTests {
         try (HttpClient client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build()) {
             assertThat(get(client, "/api/me").statusCode()).isEqualTo(401);
             String firstAccess = """
-                {"code":"0042","newPassword":"senha-ficticia","confirmPassword":"senha-ficticia"}
+                {"newPassword":"senha-ficticia","confirmPassword":"senha-ficticia"}
                 """;
             assertThat(post(client, "/api/auth/first-access", firstAccess, null).statusCode()).isEqualTo(403);
+            assertThat(post(client, "/api/auth/first-access", firstAccess, csrf(client)).statusCode()).isEqualTo(401);
             assertThat(user.isFirstAccess()).isTrue();
-            assertThat(post(client, "/api/auth/first-access", firstAccess, csrf(client)).statusCode()).isEqualTo(200);
+
+            var temporaryLogin = post(client, "/api/auth/login", """
+                {"code":"0042","password":"senha-temporaria"}
+                """, csrf(client));
+            assertThat(temporaryLogin.statusCode()).isEqualTo(200);
+            assertThat(new ObjectMapper().readTree(temporaryLogin.body()).path("firstAccess").asBoolean()).isTrue();
+            assertThat(get(client, "/api/me").statusCode()).isEqualTo(200);
+            assertThat(get(client, "/api/chamados").statusCode()).isEqualTo(403);
+            assertThat(get(client, "/api/dashboard").statusCode()).isEqualTo(403);
+            assertThat(post(client, "/api/auth/first-access", """
+                {"newPassword":"senha-temporaria","confirmPassword":"senha-temporaria"}
+                """, csrf(client)).statusCode()).isEqualTo(400);
+            String temporarySessionId = sessions.values().stream()
+                .filter(session -> session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY) != null)
+                .findFirst().orElseThrow().getId();
+            var changed = post(client, "/api/auth/first-access", firstAccess, csrf(client));
+            assertThat(changed.statusCode()).isEqualTo(200);
+            JsonNode profile = new ObjectMapper().readTree(changed.body());
+            assertThat(profile.path("firstAccess").asBoolean()).isFalse();
+            assertThat(profile.has("password")).isFalse();
+            assertThat(sessions).doesNotContainKey(temporarySessionId);
             assertThat(user.isFirstAccess()).isFalse();
             assertThat(passwordEncoder.matches("senha-ficticia", user.getPassword())).isTrue();
-            assertThat(post(client, "/api/auth/first-access", firstAccess, csrf(client)).statusCode()).isEqualTo(409);
 
             assertThat(post(client, "/api/auth/login", """
-                {"code":"0042","password":"senha-errada"}
+                {"code":"0042","password":"senha-temporaria"}
                 """, csrf(client)).statusCode()).isEqualTo(401);
-            var login = post(client, "/api/auth/login", """
-                {"code":"0042","password":"senha-ficticia"}
-                """, csrf(client));
-            assertThat(login.statusCode()).isEqualTo(200);
-            assertThat(new ObjectMapper().readTree(login.body()).has("password")).isFalse();
-
             var me = get(client, "/api/me");
             assertThat(me.statusCode()).isEqualTo(200);
             assertThat(new ObjectMapper().readTree(me.body()).path("code").asText()).isEqualTo("0042");

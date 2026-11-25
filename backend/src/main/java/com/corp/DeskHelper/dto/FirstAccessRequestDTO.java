@@ -4,11 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record FirstAccessRequestDTO(
-    @NotBlank(message = "O código é obrigatório")
-    String code,
-
     @NotBlank(message = "A nova senha é obrigatória")
-    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
+    @Size(min = 6, max = 128, message = "A senha deve ter entre 6 e 128 caracteres")
     String newPassword,
 
     @NotBlank(message = "A confirmação da senha é obrigatória")

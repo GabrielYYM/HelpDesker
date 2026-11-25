@@ -61,9 +61,10 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                .requestMatchers("/api/auth/first-access").hasRole("FIRST_ACCESS")
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .requestMatchers("/api/logout", "/api/me").authenticated()
-                .anyRequest().authenticated()
+                .anyRequest().hasAnyRole("ADM", "IT", "USER")
             )
             .logout(logout -> logout
                 .logoutUrl("/api/logout")
