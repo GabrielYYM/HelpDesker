@@ -5,37 +5,33 @@ import {
   TableContainer, TableHead, TablePagination, TableRow, TextField,
 } from '@mui/material'
 import Add from '@mui/icons-material/Add'
-import AdminPanelSettingsOutlined from '@mui/icons-material/AdminPanelSettingsOutlined'
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined'
 import GroupOutlined from '@mui/icons-material/GroupOutlined'
-import HourglassEmpty from '@mui/icons-material/HourglassEmpty'
 import Logout from '@mui/icons-material/Logout'
 import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined'
 import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined'
 import Search from '@mui/icons-material/Search'
-import VerifiedUserOutlined from '@mui/icons-material/VerifiedUserOutlined'
-import { PieChart } from '@mui/x-charts/PieChart'
 import { Link, matchPath, NavLink, useLocation } from 'react-router'
 import { api } from './api'
 import Chamados from './Chamados'
+import Dashboard from './Dashboard'
 import { Brand, ErrorNotice } from './Shared'
 
 const roles = {
-  ADM: { label: 'Administrador', color: '#7058ce' },
-  USER: { label: 'Usuário', color: '#4487d3' },
-  IT: { label: 'TI', color: '#169c89' },
+  ADM: { label: 'Administrador' },
+  USER: { label: 'Usuário' },
+  IT: { label: 'TI' },
 }
-const number = new Intl.NumberFormat('pt-BR')
 const initials = (name) => name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
 
 function UserAvatar({ name }) {
   return <Avatar aria-hidden="true" className="size-9 bg-neutral-100 text-sm font-semibold text-neutral-700">{initials(name)}</Avatar>
 }
 
-function UserTable({ users, compact = false }) {
+function UserTable({ users }) {
   return (
     <TableContainer>
-      <Table size="small" aria-label={compact ? 'Usuários recentes' : 'Usuários cadastrados'} className="min-w-[550px]">
+      <Table size="small" aria-label="Usuários cadastrados" className="min-w-[550px]">
         <TableHead className="bg-neutral-50">
           <TableRow>
             {['Nome', 'Código', 'Perfil', 'Status'].map((label) => (
@@ -60,85 +56,6 @@ function UserTable({ users, compact = false }) {
         </TableBody>
       </Table>
     </TableContainer>
-  )
-}
-
-function Overview({ users }) {
-  const active = users.filter((user) => user.active).length
-  const privileged = users.filter((user) => ['ADM', 'IT'].includes(user.role)).length
-  const pending = users.filter((user) => user.firstAccess).length
-  const chart = Object.entries(roles).map(([id, role]) => ({
-    id,
-    ...role,
-    value: users.filter((user) => user.role === id).length,
-  }))
-  const metrics = [
-    ['Usuários cadastrados', users.length, GroupOutlined],
-    ['Usuários ativos', active, VerifiedUserOutlined],
-    ['Perfis de gestão', privileged, AdminPanelSettingsOutlined],
-    ['Primeiro acesso pendente', pending, HourglassEmpty],
-  ]
-  // O código de usuário é sequencial no backend.
-  const recent = [...users].sort((a, b) => b.code.localeCompare(a.code, 'pt-BR', { numeric: true })).slice(0, 5)
-
-  return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map(([label, value, Icon]) => (
-          <Paper key={label} variant="outlined" className="p-5">
-            <span className="mb-4 grid size-9 place-items-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700">
-              <Icon fontSize="small" />
-            </span>
-            <div className="text-sm font-medium text-neutral-600">{label}</div>
-            <div className="mt-1 text-3xl font-semibold tracking-tight">{number.format(value)}</div>
-          </Paper>
-        ))}
-      </div>
-      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.75fr)]">
-        <Paper variant="outlined" className="min-w-0">
-          <div className="border-b border-neutral-200 px-5 py-4">
-            <h2 className="text-lg font-semibold tracking-tight">Usuários por perfil</h2>
-            <p className="mt-1 text-sm text-neutral-600">Distribuição dos acessos cadastrados</p>
-          </div>
-          {users.length ? (
-            <div className="p-5">
-              <div className="relative mx-auto h-[210px] max-w-[320px]">
-                <PieChart
-                  aria-label="Distribuição dos usuários por perfil"
-                  series={[{ data: chart.filter((item) => item.value > 0), innerRadius: '71%', outerRadius: '96%', paddingAngle: 3, cornerRadius: 4 }]}
-                  height={210}
-                  hideLegend
-                  margin={0}
-                />
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-content-center text-center">
-                  <span className="text-3xl font-semibold tracking-tight">{number.format(users.length)}</span>
-                  <span className="text-sm text-neutral-600">Total</span>
-                </div>
-              </div>
-              <ul className="mt-5 grid gap-2.5">
-                {chart.map(({ id, label, color, value }) => (
-                  <li key={id} className="flex items-center gap-2 text-sm">
-                    <span className="size-2.5 rounded-full" style={{ backgroundColor: color }} />
-                    <span className="grow text-neutral-700">{label}</span>
-                    <span className="font-semibold tabular-nums">{number.format(value)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : <p className="px-5 py-12 text-center text-sm text-neutral-600">A distribuição aparece após o primeiro cadastro.</p>}
-        </Paper>
-        <Paper variant="outlined" className="min-w-0 overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-4">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight">Usuários recentes</h2>
-              <p className="mt-1 text-sm text-neutral-600">Últimos cadastros no sistema</p>
-            </div>
-            <Button component={Link} to="/usuarios" variant="outlined" size="small">Ver todos</Button>
-          </div>
-          {recent.length ? <UserTable users={recent} compact /> : <p className="px-5 py-12 text-center text-sm text-neutral-600">Nenhum usuário cadastrado.</p>}
-        </Paper>
-      </div>
-    </>
   )
 }
 
@@ -249,7 +166,7 @@ export default function Management({ user, canManage, onSignOut }) {
   const showsData = canManage && (route === '/' || showsUsers)
 
   useEffect(() => {
-    if (!canManage) return
+    if (!canManage || !showsUsers) return
     const controller = new AbortController()
     api('/users', { signal: controller.signal })
       .then((users) => setResult({ users }))
@@ -257,7 +174,7 @@ export default function Management({ user, canManage, onSignOut }) {
         if (error.name !== 'AbortError') setResult({ error })
       })
     return () => controller.abort()
-  }, [canManage, attempt])
+  }, [canManage, showsUsers, attempt])
 
   useEffect(() => {
     if (result.error?.status === 401) onSignOut()
@@ -327,12 +244,12 @@ export default function Management({ user, canManage, onSignOut }) {
               <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
-                  <p className="mt-2 text-neutral-600">{showsUsers ? 'Consulte e cadastre usuários do HelpDesker.' : 'Acompanhe os usuários e perfis de acesso do HelpDesker.'}</p>
+                  <p className="mt-2 text-neutral-600">{showsUsers ? 'Consulte e cadastre usuários do HelpDesker.' : 'Acompanhe o volume de chamados e a carga da equipe.'}</p>
                 </div>
-                {result.users && <Button variant="contained" startIcon={<Add />} onClick={() => setCreating(true)}>Novo usuário</Button>}
+                {showsUsers && result.users && <Button variant="contained" startIcon={<Add />} onClick={() => setCreating(true)}>Novo usuário</Button>}
               </div>
-              {result.error ? <ErrorNotice status={result.error.status} onRetry={retry} />
-                : result.users ? showsUsers ? <Users users={result.users} /> : <Overview users={result.users} />
+              {!showsUsers ? <Dashboard onSignOut={onSignOut} /> : result.error ? <ErrorNotice status={result.error.status} onRetry={retry} />
+                : result.users ? <Users users={result.users} />
                   : <div className="grid min-h-44 place-items-center"><CircularProgress aria-label="Carregando usuários" /></div>}
             </>
           ) : route === '/' ? (

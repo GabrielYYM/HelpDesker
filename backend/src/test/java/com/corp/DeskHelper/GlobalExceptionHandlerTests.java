@@ -20,6 +20,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.session.data.mongo.MongoIndexedSessionRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.corp.DeskHelper.chamado.DashboardController;
 import com.corp.DeskHelper.controller.UserController;
 import com.corp.DeskHelper.dto.UserCreateRequestDTO;
 import com.corp.DeskHelper.model.User;
@@ -45,6 +46,15 @@ class GlobalExceptionHandlerTests {
 
     @Autowired
     private UserController userController;
+
+    @Autowired
+    private DashboardController dashboardController;
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void regularUserCannotReadDashboard() {
+        assertThatThrownBy(dashboardController::consultar).isInstanceOf(AccessDeniedException.class);
+    }
 
     @Test
     @WithMockUser(roles = "IT")
