@@ -26,7 +26,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('IT', 'ADM')")
+    @PreAuthorize("hasRole('ADM') or (hasRole('IT') and #p0.role() != T(com.corp.DeskHelper.model.enums.UserRole).ADM)")
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserCreateRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }

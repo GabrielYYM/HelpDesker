@@ -1,6 +1,8 @@
 package com.corp.DeskHelper.controller;
 
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,8 +22,12 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class AuthController {
-
     private final AuthService authService;
+
+    @GetMapping("/auth/csrf")
+    public ResponseEntity<CsrfToken> csrf(CsrfToken token) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(token);
+    }
 
     @PostMapping("/auth/login")
     public ResponseEntity<UserResponseDTO> login(@Valid @RequestBody LoginRequestDTO request, HttpServletRequest httpRequest) {

@@ -1,6 +1,7 @@
 package com.corp.DeskHelper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,9 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.session.data.mongo.MongoIndexedSessionRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.corp.DeskHelper.controller.UserController;
+import com.corp.DeskHelper.dto.UserCreateRequestDTO;
 import com.corp.DeskHelper.model.User;
 import com.corp.DeskHelper.model.enums.UserRole;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,8 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "cors.allowed-origins=http://localhost:5173",
-    "spring.data.mongodb.uri=mongodb://localhost:27017/deskhelper",
-    "spring.data.mongodb.database=deskhelper"
+    "spring.mongodb.uri=mongodb://localhost:27017/deskhelper",
+    "spring.mongodb.database=deskhelper"
 })
 class GlobalExceptionHandlerTests {
 
@@ -37,6 +42,40 @@ class GlobalExceptionHandlerTests {
 
     @Autowired
     private MongoConverter mongoConverter;
+
+    @Autowired
+    private UserController userController;
+
+    @Test
+    @WithMockUser(roles = "IT")
+    void itCannotCreateAnAdministrator() {
+        assertThatThrownBy(() -> userController.createUser(new UserCreateRequestDTO("Teste", UserRole.ADM)))
+            .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void frontendCanObtainCsrfTokenAndLogOut() throws Exception {
+        URI base = URI.create("http://localhost:" + port);
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest csrfRequest = HttpRequest.newBuilder(base.resolve("/api/auth/csrf")).build();
+            HttpResponse<String> csrf = client.send(csrfRequest, HttpResponse.BodyHandlers.ofString());
+            assertThat(csrf.statusCode()).isEqualTo(200);
+            assertThat(csrf.headers().firstValue("Cache-Control")).contains("no-store");
+
+            JsonNode token = new ObjectMapper().readTree(csrf.body());
+            String cookie = csrf.headers().firstValue("Set-Cookie").orElseThrow().split(";", 2)[0];
+            assertThat(cookie).startsWith("XSRF-TOKEN=");
+            assertThat(token.path("token").asText()).isNotBlank();
+
+            HttpRequest logout = HttpRequest.newBuilder(base.resolve("/api/logout"))
+                .header("Cookie", cookie)
+                .header(token.path("headerName").asText(), token.path("token").asText())
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+            HttpResponse<Void> response = client.send(logout, HttpResponse.BodyHandlers.discarding());
+            assertThat(response.statusCode()).isEqualTo(204);
+        }
+    }
 
     @Test
     void mongoReadsLegacyRolesAndWritesCurrentNames() {
