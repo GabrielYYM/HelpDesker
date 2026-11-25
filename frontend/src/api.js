@@ -1,3 +1,9 @@
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '')
+const apiBaseUrl = configuredApiUrl
+  ? (configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`)
+  : '/api'
+const isCrossOriginApi = /^https?:\/\//i.test(apiBaseUrl)
+
 export async function api(path, { body, method = 'GET', signal } = {}) {
   const headers = { Accept: 'application/json' }
 
@@ -9,8 +15,8 @@ export async function api(path, { body, method = 'GET', signal } = {}) {
 
   let response
   try {
-    response = await fetch('/api' + path, {
-      credentials: 'same-origin',
+    response = await fetch(apiBaseUrl + path, {
+      credentials: isCrossOriginApi ? 'include' : 'same-origin',
       headers,
       method,
       signal,

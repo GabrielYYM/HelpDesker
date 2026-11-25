@@ -84,3 +84,16 @@ O versionamento segue rigorosamente as diretrizes do Semantic Versioning 2.0.0 (
 Com Java 21, execute `bash ./mvnw --batch-mode test` na pasta `backend`. No Windows, use `.\mvnw.cmd -B test`.
 
 Os testes HTTP executam o Spring Boot em uma porta aleatória e substituem a persistência de usuários e sessões por mocks. A suíte roda sem MongoDB ativo e sem credenciais do Atlas. O GitHub Actions executa os testes em pushes e pull requests que alterem o backend ou o workflow.
+
+## Deploy no Render
+
+O arquivo `render.yaml` prepara dois serviços no mesmo Blueprint:
+
+- `helpdesker-api`: API Spring Boot em Docker, com health check em `/api/auth/csrf`.
+- `helpdesker-web`: frontend Vite estático, com fallback para as rotas do React.
+
+No Render, crie um novo **Blueprint** a partir deste repositório e selecione a branch que contém o `render.yaml`. O Blueprint cria os dois serviços no plano `free`; altere o plano no painel do Render se precisar evitar a suspensão por inatividade ou aumentar os recursos da API.
+
+A única variável solicitada na criação é `MONGODB_URI`, que deve conter a URI de produção do MongoDB Atlas. O Render gera o segredo JWT, usa a porta fornecida pela plataforma e conecta automaticamente a URL pública da API ao frontend e a URL do frontend ao CORS da API. Não inclua segredos em arquivos `.env` enviados ao Git.
+
+Para domínio próprio no frontend, inclua a origem HTTPS correspondente em `CORS_ALLOWED_ORIGINS`. A configuração padrão cobre as URLs `onrender.com` criadas pelo Blueprint. Os cookies de sessão e CSRF usam `Secure` e `SameSite=None` em produção para que a autenticação funcione quando frontend e API estiverem em origens distintas.

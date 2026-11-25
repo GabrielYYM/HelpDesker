@@ -25,6 +25,8 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.data.mongo.JdkMongoSessionConverter;
 import org.springframework.session.data.mongo.config.annotation.web.http.EnableMongoHttpSession;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,6 +44,12 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String[] allowedOrigins;
 
+    @Value("${session.cookie.secure:false}")
+    private boolean sessionCookieSecure;
+
+    @Value("${session.cookie.same-site:Lax}")
+    private String sessionCookieSameSite;
+
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Bean
@@ -52,7 +60,7 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRepository(csrfTokenRepository())
                 .csrfTokenRequestHandler(requestHandler)
             )
             .exceptionHandling(exceptions -> exceptions
@@ -74,6 +82,23 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookieCustomizer(cookie -> cookie
+            .secure(sessionCookieSecure)
+            .sameSite(sessionCookieSameSite));
+        return repository;
+    }
+
+    @Bean
+    public CookieSerializer cookieSerializer() {
+        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+        serializer.setUseSecureCookie(sessionCookieSecure);
+        serializer.setSameSite(sessionCookieSameSite);
+        return serializer;
     }
 
     @Bean
